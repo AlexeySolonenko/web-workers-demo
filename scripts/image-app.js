@@ -1,3 +1,5 @@
+
+ 
 (function(){
   // http://stackoverflow.com/questions/10906734/how-to-upload-image-into-html5-canvas
   var original;
@@ -5,7 +7,8 @@
   imageLoader.addEventListener('change', handleImage, false);
   var canvas = document.querySelector('#image');
   var ctx = canvas.getContext('2d');
-
+  var myWorker = new Worker('scripts/worker.js');
+  
   function handleImage(e){
     var reader = new FileReader();
     reader.onload = function(event){
@@ -33,16 +36,26 @@
       }
     };
   }
+  function receiveNewImg(imageData){
 
+  }
+  
   function manipulateImage(type) {
     var a, b, g, i, imageData, j, length, pixel, r, ref;
-    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     toggleButtonsAbledness();
-
+    myWorker.postMessage({'imageData':original,'type':type});
+    myWorker.onmessage = function(e){
+    // receiveNewImg(e);
+      toggleButtonsAbledness();
+      console.log(e);
+      if(e.data) return ctx.putImageData(e.data, 0, 0);
+      console.log('Message from worker received');
+    };
     // Hint! This is where you should post messages to the web worker and
     // receive messages from the web worker.
-
+    /*
     length = imageData.data.length / 4;
     for (i = j = 0, ref = length; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
       r = imageData.data[i * 4 + 0];
@@ -55,10 +68,12 @@
       imageData.data[i * 4 + 2] = pixel[2];
       imageData.data[i * 4 + 3] = pixel[3];
     }
-    toggleButtonsAbledness();
-    return ctx.putImageData(imageData, 0, 0);
+    */
+    // toggleButtonsAbledness();
+    // return ctx.putImageData(imageData, 0, 0);
   };
 
+  
   function revertImage() {
     return ctx.putImageData(original, 0, 0);
   }
